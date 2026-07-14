@@ -1,0 +1,47 @@
+# Written by Richard Christopher, Copyright 2026 NeoTec Digital
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "stablechaos"
+version = "1.0.0"
+description = "Bounded, persistent, non-converging dynamics from antagonistic and imitative coupling."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Ancillary License" }
+authors = [
+    { name = "Richard I. Christopher", email = "alephpt1@gmail.com" },
+]
+keywords = [
+    "stable-chaos",
+    "dynamical-systems",
+    "kuramoto",
+    "coupled-oscillators",
+    "frustration",
+    "self-organization",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "numpy",
+    "matplotlib",
+    "pygame",
+]
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.urls]
+Homepage = "https://github.com/vaziolabs/StableChaos"
+Repository = "https://github.com/vaziolabs/StableChaos"
+
+[tool.setuptools.packages.find]
+include = ["stablechaos*"]

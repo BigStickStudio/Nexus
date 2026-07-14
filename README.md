@@ -1,31 +1,112 @@
-# The Stable Chaos Model
+<!-- Written by Richard Christopher, Copyright 2026 NeoTec Digital -->
+# StableChaos
 
-This project has grown exponentially more ambitious than ever before.
+![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+[![License: Ancillary](https://img.shields.io/badge/license-Ancillary-lightgrey)](LICENSE.md)
 
-All of my ideas, converging into one.
+![Stable Chaos node trajectories](paper/figures/fig_scm_trajectories.png)
 
- [ .. Read More ](https://github.com/BigStickStudio/StableChaos/blob/main/README2.md)
+Two coupling mechanisms, one phenomenon. **Antagonistic (opposition) coupling** alone freezes a
+system into rigid order; **imitative (likeness) coupling** alone collapses it into wandering
+consensus. Acting together they produce bounded, persistent, non-converging dynamics — trajectories
+that never settle to a fixed point yet never diverge, with high state-space occupancy entropy. This
+repository formalizes that observation into two composable models: the **Stable Chaos Model** (a ring
+of dipole nodes) and the **Tranception phase lattice** (a frustrated Kuramoto lattice), with a
+reproducible paper, figures, tests, and demos.
 
- [the Stable Chaos](https://github.com/vaziolabs/StableChaos/tree/main/Stable%20Chaos%20Model) model outlines the relationship between a dipole tranception or connection, and the [Tranception](https://github.com/vaziolabs/StableChaos/tree/main/Tranception) framework outlines the datatype that could be used to build out our framework.
+> All of my ideas, converging into one.
 
-## TODOS:
- - [ ] Build the 3d renderer for the model e.g. plug in Nova and define a renderer
-   - [ ] Extern: Build Novas Python bindings
- - [ ] Rebuild this to be as simple as possible, including the stable chaos model
-     - [ ] We need to be able to navigate a 3d grid or image
-     - [ ] We need to be able to save to a wav but process as a workgroup
- - [ ] Run a simple +/-t where t = 0.1 - 0.001
+The term "stable chaos" is used operationally here (bounded, aperiodic, high occupancy) and is
+related to the established stable-chaos of Politi and Torcini; see [`paper/`](paper/) and
+[`docs/THEORY.md`](docs/THEORY.md).
 
- - [ ] Make configurations configurable i.e. 
-     - [ ] maybe I want to lock max_depth, or max_width for number of forks per branch
-     - [ ] definitely want to be able to determine if a flower is the end of a branch, or if flowers can happen in the middle
+## Install
 
+```bash
+pip install -e .          # users: library + demos
+pip install -e '.[dev]'   # development/testing: also installs pytest
+```
 
-~ Disclaimer ~
+The `[dev]` extra is required to run the [test suite](#testing).
 
-<sup>
-This Ancillary License grants the open-source community the perpetual right to freely use, modify, and repurpose any application, system, or service(s) herein, with the exemption of any commercial exploitation without prior written agreement. </sup>
-<sup><br/><br/>
-Redistribution, cloning, or rebranding of any part of this publication for profit, without the authors agreement, is strictly prohibited. Any financial gains derived from this project belong solely to its contributors, who retain all intellectual property and creative rights. This agreement shall be construed under common law and extends indefinitely across all dimensions and universes. </sup><br/><br/>
-<sup>
-This document must accompany all distributed content sourced from this publication. Any use of the contents herein must be appropriately credited and sourced. We appreciate you, but we are also serious. Stealing is not cool, but sharing is.</sup>
+## Quickstart
+
+```python
+from stablechaos.scm import StableChaosModel, SCMConfig
+from stablechaos.viz.figures import fig_scm_phase_portrait
+
+model = StableChaosModel(SCMConfig(n_nodes=4, seed=42))   # build
+traj = model.run(2000)                                     # run
+fig_scm_phase_portrait(traj, out="phase_portrait")         # plot -> phase_portrait.pdf/.png
+```
+
+## Demos
+
+| Demo | What it shows | Headless example |
+| --- | --- | --- |
+| `demos/scm_demo.py` | Ring of dipole nodes attracting/opposing into stable chaos | `python demos/scm_demo.py --headless --ticks 500` |
+| `demos/lattice_demo.py` | Frustrated phase lattice: 3-D polar frustration vs 2-D synchronization | `python demos/lattice_demo.py --headless --size 6 --dim 3 --k-polar -1.0` |
+| `demos/waves_demo.py` | Phasor superposition, phase vs group velocity (writes `wave_superposition.pdf/.png` and `wave_phase_group.png`) | `python demos/waves_demo.py --out demos/output` |
+| `demos/generate_figures.py` | Rebuilds every figure used by the paper | `python demos/generate_figures.py` |
+
+The lattice demo also runs as the 2-D visual, synchronizing case — `python demos/lattice_demo.py --size 16
+--dim 2 --k-polar -1.0` — where the polar orientation class is empty (the demo prints a note saying so), so
+`--k-polar` has no effect and the field simply synchronizes.
+
+Each demo defaults to `--seed 42` and writes to `demos/output/` (gitignored). `scm_demo.py` and
+`lattice_demo.py` take `--headless` and exit `0` after saving a PNG; `waves_demo.py` is headless by default
+(Agg backend) and saves its figures to the `--out` directory unless `--show` is passed.
+
+## Repository structure
+
+```
+StableChaos/
+├── stablechaos/          # library (no pygame in core)
+│   ├── state.py          # dipole state algebra
+│   ├── scm.py            # Stable Chaos Model (ring)
+│   ├── metrics.py        # variance, occupancy entropy, order parameter
+│   ├── lattice.py        # orientation classes + neighborhoods
+│   ├── oscillator.py     # frustrated Kuramoto phase lattice
+│   ├── waveform.py       # exact phasor waveform algebra
+│   └── viz/              # matplotlib figures + pygame viewer
+├── demos/                # runnable entry points
+├── tests/                # pytest suite
+├── paper/                # stable_chaos.tex + figures/
+├── docs/                 # THEORY.md, LEGACY.md
+└── web/                  # browser particle-life demo
+```
+
+## The paper
+
+The write-up lives at [`paper/stable_chaos.pdf`](paper/stable_chaos.pdf). To rebuild it from source,
+regenerate the figures first, then compile:
+
+```bash
+python demos/generate_figures.py   # writes paper/figures/*.pdf and *.png
+cd paper && make                   # runs pdflatex twice -> stable_chaos.pdf
+```
+
+## Testing
+
+Requires the `[dev]` extra (`pip install -e '.[dev]'`), which provides `pytest`:
+
+```bash
+MPLBACKEND=Agg PYTHONPATH=. pytest -q
+```
+
+## Citation
+
+```bibtex
+@techreport{christopher2026stablechaos,
+  title       = {Stable Chaos: Bounded Persistent Dynamics from Antagonistic and Imitative Coupling},
+  author      = {Christopher, Richard I.},
+  institution = {NeoTec Digital},
+  year        = {2026}
+}
+```
+
+## License
+
+Released under the **Ancillary License**: free to use, modify, and repurpose, with commercial
+exploitation reserved to the author absent prior written agreement. Full terms in
+[`LICENSE.md`](LICENSE.md).
