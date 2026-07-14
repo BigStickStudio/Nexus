@@ -9,11 +9,14 @@ never settle to a fixed point yet never diverge:
   :mod:`stablechaos.lattice`), a frustrated Kuramoto lattice.
 
 Shared diagnostics live in :mod:`stablechaos.metrics` and the waveform algebra in
-:mod:`stablechaos.waveform`. "All of my ideas, converging into one."
+:mod:`stablechaos.waveform`. The :mod:`stablechaos.engine` module fuses the SCM
+and the phase lattice into one closed-loop dynamical system. "All of my ideas,
+converging into one."
 """
 
 from __future__ import annotations
 
+from .engine import EngineConfig, StableChaosEngine
 from .lattice import Lattice, Orientation
 from .metrics import (
     acumen,
@@ -28,7 +31,7 @@ from .scm import SCMConfig, StableChaosModel
 from .state import STEP, State, sign
 from .waveform import Waveform, superpose
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 __all__ = [
     "State",
@@ -40,6 +43,8 @@ __all__ = [
     "Orientation",
     "PhaseConfig",
     "PhaseLattice",
+    "EngineConfig",
+    "StableChaosEngine",
     "Waveform",
     "superpose",
     "node_variance",

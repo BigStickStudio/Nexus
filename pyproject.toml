@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "stablechaos"
-version = "1.0.0"
+version = "1.1.0"
 description = "Bounded, persistent, non-converging dynamics from antagonistic and imitative coupling."
 readme = "README.md"
 requires-python = ">=3.10"

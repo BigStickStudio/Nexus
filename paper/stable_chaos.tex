@@ -31,6 +31,23 @@
 \newcommand{\nvOpp}{0.501}
 \newcommand{\nvImit}{0.261}
 
+% Fused engine values, final/measured at seed 42 (6x6x6 torus, 4000 steps, last-quarter metrics).
+\newcommand{\enRfull}{0.232}
+\newcommand{\enRstdFull}{0.0014}
+\newcommand{\enLiveFull}{0.0063}
+\newcommand{\enCorrFull}{-0.19}
+\newcommand{\enRdown}{0.004}
+\newcommand{\enRstdDown}{0.0004}
+\newcommand{\enLiveDown}{0.0003}
+\newcommand{\enCorrDown}{-0.03}
+\newcommand{\enRup}{0.141}
+\newcommand{\enRstdUp}{0.0840}
+\newcommand{\enLiveUp}{0.1100}
+\newcommand{\enCorrUp}{-0.03}
+% Frequency-channel-cut comparison (g_omega=0, g_f=1): frustration channel alone.
+\newcommand{\enRfrustOnly}{0.235}
+\newcommand{\enCorrFrustOnly}{-0.041}
+
 \title{Stable Chaos: Bounded Persistent Dynamics from Antagonistic and Imitative Coupling}
 \author{Richard I. Christopher\\ \normalsize NeoTec Digital}
 \date{2026}
@@ -38,18 +55,18 @@
 \maketitle
 
 \begin{abstract}
-Two coupling mechanisms pull a network of interacting units in opposite directions. Antagonistic (opposition)
-coupling, acting alone, drives a system into a rigid, frozen, low-entropy configuration. Imitative (likeness)
-coupling, acting alone, collapses the same system onto a single wandering consensus. We argue and demonstrate
-computationally that combining the two yields dynamics that are simultaneously bounded and persistently
-non-converging: trajectories never settle to a fixed point yet never diverge, and they occupy a large fraction of
-the accessible state space. We adopt the established term \emph{stable chaos} of Politi and Torcini operationally to
-name this regime. Two models make the claim concrete. The Stable Chaos Model (SCM) is a discrete-time ring of
-two-channel nodes with a deterministic opposition rule and a stochastic imitation rule; ablating either mechanism
-removes it, as opposition-only freezes and imitation-only herds. The Tranception lattice is a frustrated Kuramoto lattice whose couplings are signed by a
-squared-distance orientation class, for which the $26$-site neighborhood decomposes exactly as $26=6+12+8$. We give
-the model equations, the metrics used to quantify persistence and occupancy, an exact phasor superposition law that
-corrects a legacy transform-domain implementation, and figures from deterministic seed-$42$ runs. The scope is a
+Two coupling mechanisms pull interacting units in opposite directions. Antagonistic (opposition) coupling alone
+drives a system into a rigid, frozen, low-entropy configuration; imitative (likeness) coupling alone collapses it
+onto a single wandering consensus. Combining them yields dynamics simultaneously bounded and persistently
+non-converging, occupying a large fraction of the accessible state space. We adopt the term \emph{stable chaos} of
+Politi and Torcini operationally. The Stable Chaos Model (SCM), a discrete-time ring of two-channel nodes with a
+deterministic opposition rule and a stochastic imitation rule, stays both live and diverse only with both mechanisms:
+opposition-only freezes, imitation-only herds. The Tranception lattice, a frustrated Kuramoto lattice whose couplings
+are signed by a squared-distance orientation class ($26=6+12+8$), transitions from synchronization to incoherence
+under three-dimensional polar frustration. We also give an exact phasor superposition law correcting a legacy
+transform-domain implementation. Finally we fuse the two models into one closed-loop engine on a shared torus: the
+phase field sources the state's drive while the state modulates the phase field, self-regulating to a sustained
+intermediate order ($r\approx0.23$) some sixty times more tightly than a stochastic-drive control. The scope is a
 model-level computational exploration; we make no continuum or hardware claims.
 \end{abstract}
 
@@ -83,11 +100,14 @@ of two-channel nodes formalizing a legacy prototype; it combines a deterministic
 imitation rule, and its two switches let us ablate each mechanism independently. The Tranception lattice,
 Section~\ref{sec:lattice}, is a $d$-dimensional frustrated Kuramoto lattice whose couplings are signed by the
 geometric orientation class of each neighbor pair. Section~\ref{sec:waves} contributes an exact phasor superposition
-law used to correct a legacy transform-domain waveform implementation. Our contributions are: a symmetrized,
-reproducible formalization of the SCM with quantitative occupancy and persistence metrics
-(Sections~\ref{sec:scm}--\ref{sec:scmresults}); an orientation-class lattice with an exact neighborhood decomposition
-and its frustrated phase dynamics (Sections~\ref{sec:lattice}--\ref{sec:latticeresults}); and a closed-form waveform
-algebra (Section~\ref{sec:waves}). All figures are produced by deterministic runs seeded at $42$.
+law used to correct a legacy transform-domain waveform implementation. Section~\ref{sec:engine} then merges the SCM and
+the lattice into one closed-loop engine on a shared torus, realizing the legacy objective to fuse the two models. Our
+contributions are: a symmetrized, reproducible formalization of the SCM with quantitative occupancy and persistence
+metrics (Sections~\ref{sec:scm}--\ref{sec:scmresults}); an orientation-class lattice with an exact neighborhood
+decomposition and its frustrated phase dynamics (Sections~\ref{sec:lattice}--\ref{sec:latticeresults}); a closed-form
+waveform algebra (Section~\ref{sec:waves}); and a fused closed-loop engine that merges the two models on one toroidal
+lattice and self-stabilizes to a sustained intermediate order (Section~\ref{sec:engine}). All figures are produced by
+deterministic runs seeded at $42$.
 
 \section{The Stable Chaos Model}
 \label{sec:scm}
@@ -427,6 +447,143 @@ alignment couplings synchronize and the negative polar coupling frustrates, whil
 in a partially ordered, non-uniform state. Antagonism and imitation are again in tension, and the tension is what
 sustains the dynamics.
 
+\section{A Fused Engine: Self-Stabilization amidst Chaos}
+\label{sec:engine}
+
+The two models above were presented side by side: the SCM on a ring, the frustrated lattice on a torus, each telling
+the antagonism-versus-imitation story in its own vocabulary. The legacy prototype that seeded this project stated a
+further goal---to \emph{merge} the Stable Chaos Model and the Tranception lattice into one self-stabilizing system.
+This section realizes that merge. We place both dynamics on a single toroidal lattice, advance them with one clock, and
+close the loop between them: the phase field sources the SCM's drive, and the SCM state reshapes the phase field's
+frequencies and frustration. The composite neither synchronizes nor collapses; it self-regulates to a sustained
+intermediate order.
+
+\subsection{The fused model}
+Every node $i$ of one $L^d$ toroidal lattice ($L$ even, $L\ge4$, $d\in\{1,2,3\}$) now carries \emph{both} a phase
+$\varphi_i\in[0,2\pi)$ and an SCM state $\stvec_i=(A_i,B_i)\in[-1,1]^2$. The SCM ring relations of
+Section~\ref{sec:scm} are transplanted onto the lattice geometry: the \emph{opposite} $o(i)$ is the toroidal antipode,
+each active coordinate mapped $c_k\mapsto(c_k+L/2)\bmod L$; the \emph{left} $\ell(i)$ and \emph{right} $\rho(i)$
+neighbors are the $\pm x$ ring neighbors along the first axis, $(x\pm1)\bmod L$. A single synchronous tick advances
+both fields and couples them both ways.
+
+\emph{Downward coupling (state drives phase).} The SCM state modulates the frustrated Kuramoto lattice of
+Equation~\eqref{eq:phaseode} at every node. The live $B$ channel wanders each node's natural frequency, and the
+antagonistic $A$ channel---which saturates fast to $\pm1$, as in Section~\ref{sec:scmresults}, and thereafter is
+effectively frozen---carves a spatially varying polar coupling:
+\begin{equation}
+\omega_i(t)=\omega_i^{0}+g_\omega\,B_i(t),\qquad
+K^{\mathrm{pol}}_i(t)=K_{\mathrm{polar}}\,\frac{1+g_f\,A_i(t)}{1+g_f},\quad g_f\in[0,1].
+\label{eq:downcouple}
+\end{equation}
+The phase increment is Equation~\eqref{eq:phaseode} with $\omega_i\mapsto\omega_i(t)$ and the constant polar coupling
+$K_{\mathrm{polar}}\mapsto K^{\mathrm{pol}}_i(t)$, integrated by the same forward-Euler wrap:
+\begin{equation}
+\varphi_i(t{+}\Delta t)=\biggl[\varphi_i(t)+\Delta t\biggl(\omega_i(t)
++\!\!\sum_{c\in\{\mathrm{orth},\mathrm{adj}\}}\!\frac{K_c}{|N_c(i)|}\!\!\sum_{j\in N_c(i)}\!\!\sin(\varphi_j-\varphi_i)
++\frac{K^{\mathrm{pol}}_i(t)}{|N_{\mathrm{pol}}(i)|}\!\!\sum_{j\in N_{\mathrm{pol}}(i)}\!\!\sin(\varphi_j-\varphi_i)\biggr)\biggr]\bmod 2\pi.
+\label{eq:enginephase}
+\end{equation}
+
+\emph{Upward coupling (phase drives state).} The stochastic imitation draws
+$r_A,r_B\sim\mathrm{Uniform}\{-1,0,+1\}$ of Equation~\eqref{eq:imit} are replaced, under the default \texttt{phase}
+drive, by deterministic signs read from the phase field itself:
+\begin{equation}
+r_A=\sgn\!\bigl(\sin(\varphi_i-\varphi_{o(i)})\bigr),\qquad
+r_B=\sgn\!\bigl(\sin(\varphi_{\ell(i)}-\varphi_i)\bigr).
+\label{eq:phasedrive}
+\end{equation}
+The state $\stvec_i$ is then advanced by the \emph{exact} SCM update of
+Equations~\eqref{eq:opp}--\eqref{eq:update}---half-gap-capped opposition against the antipode $o(i)$, then imitation
+against the ring neighbors, sequential and clamped---with these phase-sourced signs in place of the random draws.
+Because the drive is now read from the phases, the engine consumes no randomness after its seeded initialization, so
+the whole trajectory is deterministic given the seed; the \texttt{random} drive restores the seeded
+$\mathrm{Uniform}\{-1,0,+1\}$ draws as an ablation control.
+
+\emph{Exact reduction.} At $g_\omega=g_f=0$ the frequency wander vanishes and
+$K^{\mathrm{pol}}_i(t)=K_{\mathrm{polar}}(1{+}0)/(1{+}0)=K_{\mathrm{polar}}$ is constant again, so
+Equation~\eqref{eq:enginephase} collapses to Equation~\eqref{eq:phaseode}. Since the phases, frequencies, and initial
+states are drawn from the same seeded generator as a standalone lattice, the phase subsystem then reproduces the
+Section~\ref{sec:latticeresults} lattice bit for bit---an exact equivalence verified in the test suite, not an
+approximation.
+
+\subsection{Results}
+We integrate the fused engine on the $6\times6\times6$ torus for $4000$ steps at $\Delta t=0.05$, with
+$K_{\mathrm{orth}}=1$, $K_{\mathrm{adj}}=0.5$, $K_{\mathrm{polar}}=-1$, step $\delta=0.0987$, and the default gains
+$g_\omega=g_f=1$ under the \texttt{phase} drive, seeded at $42$; all metrics are averaged over the final quarter of the
+run. We compare three configurations: the \emph{fused} engine; a \emph{downward ablation} ($g_\omega=g_f=0$), which
+severs the state-to-phase link and, by the reduction above, is exactly the plain frustrated lattice of
+Section~\ref{sec:latticeresults}; and an \emph{upward ablation} (\texttt{random} drive), which severs the deterministic
+phase-to-state link. Figure~\ref{fig:engineorder} tracks the order parameter $r(t)$ of the three, and
+Figure~\ref{fig:enginefields} shows the mid-plane phase and $A$ fields of the fused run;
+Table~\ref{tab:engine} collects the headline metrics.
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.85\linewidth]{figures/fig_engine_order.pdf}
+\caption{Order parameter $r(t)$ of the fused engine (black) against its two ablations on the $6\times6\times6$ torus,
+seed $42$, in continuous time $t=\text{step}\times\Delta t$. The fused engine rises from near zero, overshoots to
+$r\approx0.29$ near $t\approx50$, then self-regulates to a sustained plateau $r\approx\enRfull$. The downward ablation
+($g_\omega=g_f=0$, blue)---the plain frustrated lattice of Section~\ref{sec:latticeresults}---stays frozen near
+$r\approx\enRdown$; the upward ablation (\texttt{random} drive, orange) fluctuates widely about a lower mean,
+$r=\enRup\pm\enRstdUp$.}
+\label{fig:engineorder}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\linewidth]{figures/fig_engine_fields.pdf}
+\caption{Mid-plane slices of the fused run after $4000$ steps. Left: the phase field, hue $=\varphi\in[0,2\pi)$,
+carrying spatial structure rather than a single hue or uniform noise. Right: the frozen $A$ field that carves the
+frustration landscape of Equation~\eqref{eq:downcouple}, from $A=-1$ (blue) to $A=+1$ (red). Per-node local coherence
+over the orthogonal neighborhood is anti-correlated with $A$ across the volume (Pearson $r=\enCorrFull$): the lower-$A$
+wells of the landscape host the more coherent patches.}
+\label{fig:enginefields}
+\end{figure}
+
+\begin{table}[H]
+\centering
+\caption{Fused engine headline metrics, seed $42$, $6\times6\times6$ torus, $4000$ steps, averaged over the final
+quarter. Order parameter mean $r$ and its standard deviation $\sigma_r$; SCM liveness, the mean step size $S_{200}$ of
+Section~\ref{sec:metrics}; and the Pearson correlation between per-node local orthogonal coherence and the frozen $A$
+field.}
+\label{tab:engine}
+\begin{tabular}{lcccc}
+\toprule
+Configuration & $r$ & $\sigma_r$ & \shortstack{SCM liveness\\ $S_{200}$} & \shortstack{coherence--$A$\\ correlation} \\
+\midrule
+Fused (phase drive, $g_\omega{=}g_f{=}1$) & $\enRfull$ & $\enRstdFull$ & $\enLiveFull$ & $\enCorrFull$ \\
+Downward ablation ($g_\omega{=}g_f{=}0$)  & $\enRdown$ & $\enRstdDown$ & $\enLiveDown$ & $\enCorrDown$ \\
+Upward ablation (\texttt{random} drive)   & $\enRup$   & $\enRstdUp$   & $\enLiveUp$   & $\enCorrUp$   \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three measured claims follow, each tied to the table. \emph{(i) Regulation.} The fused engine holds the order
+parameter at a sustained plateau $r=\enRfull$ with standard deviation $\sigma_r=\enRstdFull$ over the last quarter,
+about $60\times$ tighter than the stochastic-drive control's $\enRstdUp$ (upward ablation, $r=\enRup\pm\enRstdUp$):
+closing the loop through the phase-sourced drive turns a jittery signal into a regulated one. \emph{(ii) Mutual
+sustenance.} Neither subsystem survives alone in this regime. Severing the downward link (the downward ablation) drops
+the lattice to $r=\enRdown$---the bare frustrated-lattice incoherence of Section~\ref{sec:latticeresults}---and freezes
+the SCM, whose mean step size $S_{200}$ falls to $\enLiveDown$; the closed loop instead holds the lattice at partial
+order $r=\enRfull$ \emph{and} keeps the states live at $\enLiveFull$. Each subsystem sustains the other: the state
+feedback lifts the frustrated lattice off incoherence, and the regulated phase field keeps the states from freezing.
+\emph{(iii) Spatial organization.} The fused field is not merely globally regulated but spatially organizes: the
+per-node local coherence over each node's orthogonal neighborhood is anti-correlated with the frozen frustration field
+$A$, Pearson $r=\enCorrFull$ (Figure~\ref{fig:enginefields}), so nodes sitting in low-$A$ wells of the landscape are
+more locally coherent than those on high-$A$ ridges. The frustration channel is \emph{necessary} for both the partial
+order and this spatial organization---cutting it ($g_f=0$) collapses both, dropping the order to $r\approx0.008$ and
+the correlation to $\approx-0.02$---but it is \emph{not sufficient}. Cutting the frequency channel instead
+($g_\omega=0$, $g_f=1$) leaves global order intact at $r=\enRfrustOnly$ while the coherence--$A$ correlation falls to
+only $\enCorrFrustOnly$, and the stochastic-drive control likewise organizes weakly ($\enCorrUp$ at $r=\enRup$). The
+full $\enCorrFull$ organization emerges only with the complete closed loop: both downward channels together with the
+phase-sourced drive.
+
+The regime is robust but not knife-edged. Raising the SCM step to $\delta{=}0.2$ pushes the order up to $r\approx0.30$
+but washes the spatial signature out (correlation $-0.02$): the faster-wandering $A$ field re-carves its landscape too
+quickly for coherence to organize against it, trading organization for order. Strengthening the frustration to
+$K_{\mathrm{polar}}=-1.5$ lowers the order to $r\approx0.13$, weakening the plateau. The default gains are thus a
+measured operating point, not a singular one.
+
 \section{Waveform Algebra}
 \label{sec:waves}
 
@@ -508,14 +665,23 @@ exploration of finite discrete and semi-discrete models. We do not take a contin
 Lyapunov spectra, and we make no hardware claims; the ``chaos'' in our title is the operational notion of
 Section~\ref{sec:intro}, aligned in spirit with but not a measurement of the stable chaos of~\cite{politi2010}.
 
+The legacy prototype's open objective---to merge the Stable Chaos Model and the Tranception lattice into a single
+self-stabilizing system---is realized by the fused engine of Section~\ref{sec:engine}. On one shared torus, under one
+clock, the phase field and the two-channel state close a loop that self-regulates to a sustained intermediate order,
+keeping each subsystem alive that alone would freeze or collapse: the state feedback lifts the frustrated lattice off
+incoherence, and the regulated phase field keeps the states from freezing. This sharpens rather than replaces the
+two-model thesis; the engine is a construction in which the same antagonism-versus-imitation tension operates in closed
+loop, and its three measured claims---regulation, mutual sustenance, and closed-loop spatial organization---remain
+deliberately modest, single-seed measurements.
+
 Several extensions follow directly from the constructions. The orientation classifier and the lattice already
 support the toroidal option and dimensions one through three, so the frustrated phase dynamics can be studied on
 higher-dimensional tori where every node has the full $6/12/8$ neighborhood and boundary effects vanish. The exact
 phasor algebra of Section~\ref{sec:waves} invites an audio reading of the lattice, mapping node phases to partials
 and studying the timbral consequences of frustration, and the same orientation-classed couplings suggest a
 constraint-driven, wave-function-collapse style of spatial generation. Quantifying the SCM's persistence spectrally
-through the autocorrelation of Section~\ref{sec:metrics}, and mapping the full $(N,\delta)$ parameter surface, are
-the natural next measurements. Each of these is a concrete, testable continuation of the same thesis: opposition
+through the autocorrelation of Section~\ref{sec:metrics}, mapping the full $(N,\delta)$ parameter surface, and charting
+the fused engine's $(g_\omega,g_f)$ gain plane and its scaling with lattice size, are the natural next measurements. Each of these is a concrete, testable continuation of the same thesis: opposition
 without imitation freezes, imitation without opposition collapses, and the two together stay alive.
 
 \begin{thebibliography}{9}

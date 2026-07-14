@@ -21,3 +21,4 @@ paper/*.toc
 
 # Environments
 .venv/
+uv.lock

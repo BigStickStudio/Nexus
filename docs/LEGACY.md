@@ -61,6 +61,7 @@ is stated here precisely so the formal rules are traceable to their origin.
 | `fragment_test.py` | `tests/` | replaced by the pytest suite |
 | `__init__.py` (root) | removed | package now rooted at `stablechaos/` |
 | `README2.md` | `docs/THEORY.md` + `README.md` | HATS narrative |
+| `README2.md` merge objective ("merge Stable Chaos Model and Tranception") | `stablechaos/engine.py` (v1.1) | the legacy open item, now realized: a fused closed-loop engine on one torus (see [`THEORY.md`](THEORY.md) §6) |
 | `Phases In Nature.md` | `docs/THEORY.md` | phase vs group velocity |
 | `README.md` (root) | `README.md` (rewritten) + `LICENSE.md` | Ancillary License moved to `LICENSE.md` verbatim |
 

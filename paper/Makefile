@@ -7,6 +7,7 @@ all: $(MAIN).pdf
 $(MAIN).pdf: $(MAIN).tex $(wildcard figures/*.pdf)
 	$(PDFLATEX) $(MAIN).tex
 	$(PDFLATEX) $(MAIN).tex
+	$(PDFLATEX) $(MAIN).tex
 
 clean:
 	rm -f $(MAIN).aux $(MAIN).log $(MAIN).out $(MAIN).toc

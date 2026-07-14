@@ -138,3 +138,38 @@ The relationship between the two models is the thesis itself: the Stable Chaos M
 antagonistic-plus-imitative coupling on a minimal ring, while the Tranception lattice realizes the
 same competition between alignment and frustration on an extended geometry. Both are bounded and
 persistent; neither converges.
+
+## 6. The fused engine: realizing the "merge"
+
+The legacy READMEs shared one unfinished ambition, stated plainly in `README2.md`: to **merge the
+Stable Chaos Model and Tranception** into a single self-stabilizing system. Sections 2–3 formalize the
+two halves separately; [`stablechaos/engine.py`](../stablechaos/engine.py) closes the loop between
+them. Every node of one toroidal lattice now carries **both** a phase `phi` (Tranception) and a dipole
+state `(A, B)` (Stable Chaos Model), and a single synchronous clock advances the pair.
+
+The merge is a two-way coupling, each direction reusing a piece the two models already provided:
+
+- **Antipodal opposition.** The SCM's ring `opposite` becomes the toroidal antipode: each coordinate
+  is mapped `c -> (c + L/2) mod L`, so a node's opposition partner is its geometric antipode on the
+  torus, and the `left`/`right` imitation neighbors are the `±x` ring neighbors. The exact
+  half-gap-capped opposition and imitation rules of Section 3 run unchanged on this topology.
+- **Frequency modulation by B (downward).** The live `B` channel wanders each node's natural
+  frequency, `omega_i -> omega_i0 + g_omega * B_i`. Because `B` never freezes, it keeps injecting
+  motion into the phase field.
+- **Frustration landscape by A (downward).** The antagonistic `A` channel saturates to `±1` and then
+  holds, so it acts as a frozen spatial map that carves the polar (frustration) coupling,
+  `K_polar -> K_polar * (1 + g_f * A_i) / (1 + g_f)`. Frustration is no longer uniform; it is a
+  landscape written by the state.
+- **Phase-sourced drive (upward, closing the loop).** The SCM's stochastic `Uniform{-1, 0, +1}` draws
+  are replaced by signs read from the phase field itself: `r_A = sign(sin(phi_i - phi_opposite))` and
+  `r_B = sign(sin(phi_left - phi_i))`. The oscillators now tell the states which way to move, so the
+  system is deterministic after its seeded start rather than externally driven.
+
+The loop is therefore complete: phases drive states (upward), states reshape the frequencies and
+frustration that drive the phases (downward), and one clock turns both. Setting `g_omega = g_f = 0`
+severs the downward link and the phase subsystem reduces *bit-for-bit* to the plain lattice of
+Section 2, so the fusion is an exact extension of the earlier model rather than a reimplementation.
+Conceptually this is where "opposition stabilizes, likeness destabilizes" and "alignment synchronizes,
+frustration disperses" stop being two parallel stories and become one feedback system that
+self-regulates to a sustained intermediate order. The measurements are in the fused-engine section of
+[`paper/stable_chaos.pdf`](../paper/stable_chaos.pdf) and summarized in the project README.

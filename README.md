@@ -2,6 +2,7 @@
 # StableChaos
 
 ![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
+![Version 1.1.0](https://img.shields.io/badge/version-1.1.0-green)
 [![License: Ancillary](https://img.shields.io/badge/license-Ancillary-lightgrey)](LICENSE.md)
 
 ![Stable Chaos node trajectories](paper/figures/fig_scm_trajectories.png)
@@ -10,9 +11,11 @@ Two coupling mechanisms, one phenomenon. **Antagonistic (opposition) coupling** 
 system into rigid order; **imitative (likeness) coupling** alone collapses it into wandering
 consensus. Acting together they produce bounded, persistent, non-converging dynamics — trajectories
 that never settle to a fixed point yet never diverge, with high state-space occupancy entropy. This
-repository formalizes that observation into two composable models: the **Stable Chaos Model** (a ring
-of dipole nodes) and the **Tranception phase lattice** (a frustrated Kuramoto lattice), with a
-reproducible paper, figures, tests, and demos.
+repository formalizes that observation into two composable models — the **Stable Chaos Model** (a ring
+of dipole nodes) and the **Tranception phase lattice** (a frustrated Kuramoto lattice) — and then
+**fuses them into a single closed-loop engine** on one toroidal lattice, where every node carries both
+a phase and a two-channel state and the two dynamics drive each other. One package, both models and
+their fusion, with a reproducible paper, figures, tests, and demos.
 
 > All of my ideas, converging into one.
 
@@ -40,12 +43,38 @@ traj = model.run(2000)                                     # run
 fig_scm_phase_portrait(traj, out="phase_portrait")         # plot -> phase_portrait.pdf/.png
 ```
 
+## The Engine
+
+`stablechaos/engine.py` (new in 1.1.0) fuses the two models into one closed-loop system on a single
+toroidal lattice: every node carries both a phase `phi` and a two-channel SCM state `(A, B)`, advanced
+by one clock. The phase field sources the SCM's drive (upward coupling); the live `B` channel wanders
+each node's natural frequency and the frozen `A` field carves a spatial frustration landscape
+(downward coupling). At zero gains it reduces bit-for-bit to the plain phase lattice.
+
+Measured on the seed-42 6×6×6 torus (4000 steps, metrics over the last quarter):
+
+- **Regulation** — holds a sustained order `r = 0.232 ± 0.0014`, about **60× tighter** than the
+  stochastic-drive control (`± 0.084`).
+- **Mutual sustenance** — keeps the lattice partially ordered (`r = 0.232` vs `0.004` frozen) *and*
+  the states live (step size `0.0063` vs `0.0003` frozen); neither subsystem survives the loop being cut.
+- **Spatial organization** — local coherence anti-correlates with the frustration field `A`
+  (Pearson `r = -0.19`), a signature that collapses to `≈ 0` when the frustration channel is off.
+
+```python
+from stablechaos.engine import StableChaosEngine, EngineConfig
+
+engine = StableChaosEngine(EngineConfig(size=6, dim=3, seed=42))  # fused engine, defaults
+engine.run(4000)                                                  # one closed loop
+engine.order_parameter()                                          # ~0.23
+```
+
 ## Demos
 
 | Demo | What it shows | Headless example |
 | --- | --- | --- |
 | `demos/scm_demo.py` | Ring of dipole nodes attracting/opposing into stable chaos | `python demos/scm_demo.py --headless --ticks 500` |
 | `demos/lattice_demo.py` | Frustrated phase lattice: 3-D polar frustration vs 2-D synchronization | `python demos/lattice_demo.py --headless --size 6 --dim 3 --k-polar -1.0` |
+| `demos/engine_demo.py` | Fused engine: phase-hue field beside the frozen A frustration landscape, one closed loop | `python demos/engine_demo.py --headless --size 6 --dim 3 --seed 42` |
 | `demos/waves_demo.py` | Phasor superposition, phase vs group velocity (writes `wave_superposition.pdf/.png` and `wave_phase_group.png`) | `python demos/waves_demo.py --out demos/output` |
 | `demos/generate_figures.py` | Rebuilds every figure used by the paper | `python demos/generate_figures.py` |
 
@@ -67,6 +96,7 @@ StableChaos/
 │   ├── metrics.py        # variance, occupancy entropy, order parameter
 │   ├── lattice.py        # orientation classes + neighborhoods
 │   ├── oscillator.py     # frustrated Kuramoto phase lattice
+│   ├── engine.py         # fused closed-loop engine (both models, one clock)
 │   ├── waveform.py       # exact phasor waveform algebra
 │   └── viz/              # matplotlib figures + pygame viewer
 ├── demos/                # runnable entry points

@@ -229,6 +229,52 @@ def fig_neighborhood(out: Path | str | None = None) -> Figure:
     return fig
 
 
+def fig_engine_order(
+    orders: dict[str, np.ndarray], dt: float, out: Path | str | None = None
+) -> Figure:
+    """Plot fused-engine order r(t) against its downward and upward ablations."""
+    fig, ax = plt.subplots(figsize=(8, 5))
+    for label in orders:
+        series = np.asarray(orders[label])
+        times = np.arange(series.shape[0]) * dt
+        ax.plot(times, series, lw=1.3, label=label)
+    ax.set_xlabel("time")
+    ax.set_ylabel("order parameter r")
+    ax.set_ylim(0.0, 1.05)
+    ax.grid(True, alpha=0.3)
+    ax.set_title("Fused engine: self-stabilized intermediate order")
+    ax.legend(fontsize=8, loc="upper right")
+    fig.tight_layout()
+    _save(fig, out)
+    return fig
+
+
+def fig_engine_fields(
+    phase_field: np.ndarray,
+    a_field: np.ndarray,
+    correlation: float,
+    out: Path | str | None = None,
+) -> Figure:
+    """Show the fused phase-field slice beside the frozen A-field slice."""
+    fig, (ax_phase, ax_a) = plt.subplots(1, 2, figsize=(11, 5.0))
+    ax_phase.imshow(_phase_image(np.asarray(phase_field)),
+                    origin="lower", interpolation="nearest")
+    ax_phase.set_title(r"phase field (hue = $\varphi \in [0, 2\pi)$)")
+    mesh = ax_a.imshow(np.asarray(a_field), origin="lower", interpolation="nearest",
+                       cmap="coolwarm", vmin=-1.0, vmax=1.0)
+    fig.colorbar(mesh, ax=ax_a, label="A")
+    ax_a.set_title("frozen A field (frustration landscape)")
+    for axis in (ax_phase, ax_a):
+        axis.set_xlabel("x")
+        axis.set_ylabel("y")
+    fig.suptitle(
+        f"Mid-plane slices: local coherence vs A, Pearson r = {correlation:.2f}"
+    )
+    fig.tight_layout()
+    _save(fig, out)
+    return fig
+
+
 def fig_wave_superposition(out: Path | str | None = None) -> Figure:
     """Show two near-frequency waves and their beating superposition."""
     duration = 2.0

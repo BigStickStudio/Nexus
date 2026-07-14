@@ -20,6 +20,7 @@ from ..metrics import acumen
 from .colors import PALETTE, phase_color, state_color
 
 if TYPE_CHECKING:  # pragma: no cover - type hints only
+    from ..engine import StableChaosEngine
     from ..lattice import Lattice
     from ..scm import StableChaosModel
 
@@ -126,3 +127,38 @@ def draw_phase_lattice(
         color = phase_color(float(phases[idx]))
         rect = (int(cx * cell_w), int(cy * cell_h), int(cell_w) + 1, int(cell_h) + 1)
         pygame.draw.rect(surface, color, rect)
+
+
+def _draw_field_panel(surface, cells, values, colorize, origin_x, panel_w) -> None:
+    """Fill a panel with cells colored by ``colorize(value)`` at a mid slice."""
+    grid = max(c[0] for c in cells) + 1
+    cell = panel_w / grid
+    for (cx, cy), value in zip(cells, values):
+        color = colorize(value)
+        rect = (int(origin_x + cx * cell), int(cy * cell), int(cell) + 1, int(cell) + 1)
+        pygame.draw.rect(surface, color, rect)
+
+
+def draw_engine(surface: "pygame.Surface", engine: "StableChaosEngine") -> None:
+    """Draw the fused engine: phase hue field beside the grayscale A field."""
+    width, height = surface.get_size()
+    z_mid = engine.config.size // 2 if engine.config.dim == 3 else 0
+    cells: list[tuple[int, int]] = []
+    node_ids: list[int] = []
+    for idx in range(engine.n):
+        cx, cy, cz = engine.lattice.coords(idx)
+        if cz == z_mid:
+            cells.append((cx, cy))
+            node_ids.append(idx)
+    half = width // 2
+    phases = [float(engine.phases[i]) for i in node_ids]
+    a_values = [float(engine.states[i, 0]) for i in node_ids]
+    _draw_field_panel(surface, cells, phases, phase_color, 0, half)
+    _draw_field_panel(surface, cells, a_values, _gray, half, half)
+
+
+def _gray(value: float) -> tuple[int, int, int]:
+    """Map an A value in [-1, 1] to a grayscale RGB triple."""
+    level = int((value + 1.0) / 2.0 * 255.0)
+    level = max(0, min(255, level))
+    return (level, level, level)

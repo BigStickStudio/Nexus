@@ -21,7 +21,8 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from stablechaos.lattice import Lattice
+from stablechaos.engine import EngineConfig, StableChaosEngine
+from stablechaos.lattice import Lattice, Orientation
 from stablechaos.metrics import kuramoto_order
 from stablechaos.oscillator import PhaseConfig, PhaseLattice
 from stablechaos.scm import SCMConfig, StableChaosModel
@@ -35,6 +36,7 @@ LATTICE_STEPS = 4000
 SWEEP_STEPS = 2000
 DT = 0.05
 K_POLARS = (0.0, -0.5, -1.0)
+ENGINE_STEPS = 4000
 FIG_DIR = Path(__file__).resolve().parents[1] / "paper" / "figures"
 
 
@@ -80,6 +82,50 @@ def _z_slice(lattice: Lattice, phases: np.ndarray, z: int) -> np.ndarray:
     return field
 
 
+def _engine_orders(seed: int) -> dict[str, np.ndarray]:
+    """Return r(t) for the fused engine and its two ablations."""
+    variants = {
+        "fused (phase, gains 1/1)": EngineConfig(
+            size=LATTICE_SIZE, dim=LATTICE_DIM, seed=seed),
+        "downward ablation (gains 0/0)": EngineConfig(
+            size=LATTICE_SIZE, dim=LATTICE_DIM, omega_gain=0.0,
+            frustration_gain=0.0, seed=seed),
+        "upward ablation (drive=random)": EngineConfig(
+            size=LATTICE_SIZE, dim=LATTICE_DIM, drive="random", seed=seed),
+    }
+    orders: dict[str, np.ndarray] = {}
+    for label, config in variants.items():
+        phases, _ = StableChaosEngine(config).run(ENGINE_STEPS)
+        orders[label] = kuramoto_order(phases)
+    return orders
+
+
+def _local_coherence(engine: StableChaosEngine, phases: np.ndarray) -> np.ndarray:
+    """Per-node orthogonal-neighbor local coherence of a phase snapshot."""
+    src, tgt, deg = engine._classes[Orientation.ORTHOGONAL]
+    z = np.exp(1j * (phases[tgt] - phases[src]))
+    acc = (np.bincount(src, weights=z.real, minlength=engine.n)
+           + 1j * np.bincount(src, weights=z.imag, minlength=engine.n))
+    return np.abs(acc / deg)
+
+
+def _engine_fields(seed: int) -> tuple[np.ndarray, np.ndarray, float]:
+    """Return the fused mid-plane phase slice, A slice, and coherence-A r."""
+    engine = StableChaosEngine(EngineConfig(size=LATTICE_SIZE, dim=LATTICE_DIM,
+                                            seed=seed))
+    phases, states = engine.run(ENGINE_STEPS)
+    z_mid = LATTICE_SIZE // 2
+    phase_slice = _z_slice(engine.lattice, phases[-1], z_mid)
+    a_slice = _z_slice(engine.lattice, states[-1, :, 0], z_mid)
+    coherence = _local_coherence(engine, phases[-1])
+    a_field = states[-1, :, 0]
+    centered_c = coherence - coherence.mean()
+    centered_a = a_field - a_field.mean()
+    denom = np.sqrt(np.sum(centered_c**2) * np.sum(centered_a**2))
+    corr = float(np.sum(centered_c * centered_a) / denom) if denom > 0 else 0.0
+    return phase_slice, a_slice, corr
+
+
 def _render(func, base: Path, *args, **kwargs) -> None:
     """Call a figure function, close its figure, and print the output paths."""
     plt.close(func(*args, out=base, **kwargs))
@@ -88,7 +134,7 @@ def _render(func, base: Path, *args, **kwargs) -> None:
 
 
 def main() -> int:
-    """Produce all nine paper figures (PDF and PNG each)."""
+    """Produce all eleven paper figures (PDF and PNG each)."""
     FIG_DIR.mkdir(parents=True, exist_ok=True)
     scm = _scm_runs(SEED)
     _render(F.fig_scm_trajectories, FIG_DIR / "fig_scm_trajectories", scm["full"])
@@ -108,6 +154,11 @@ def main() -> int:
     _render(F.fig_lattice_phases, FIG_DIR / "fig_lattice_phases", fields)
     _render(F.fig_neighborhood, FIG_DIR / "fig_neighborhood")
     _render(F.fig_wave_superposition, FIG_DIR / "fig_wave_superposition")
+    _render(F.fig_engine_order, FIG_DIR / "fig_engine_order",
+            _engine_orders(SEED), DT)
+    phase_slice, a_slice, corr = _engine_fields(SEED)
+    _render(F.fig_engine_fields, FIG_DIR / "fig_engine_fields",
+            phase_slice, a_slice, corr)
     return 0
 
 
